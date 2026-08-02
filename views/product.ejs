@@ -1,0 +1,129 @@
+<div class="wrap" style="padding-top: 24px;">
+  <!-- Breadcrumb -->
+  <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; display: flex; gap: 8px; align-items: center;">
+    <a href="/" style="color: var(--accent-cyan);">হোম</a>
+    <span>›</span>
+    <a href="/?category=<%= encodeURIComponent(product.category) %>" style="color: var(--text-secondary);"><%= product.category %></a>
+    <span>›</span>
+    <span style="color: var(--text-primary);"><%= product.name %></span>
+  </div>
+
+  <div class="product-detail-layout">
+    <!-- Image Box -->
+    <div class="detail-img-box">
+      <img src="<%= product.imageUrl %>" alt="<%= product.name %>" />
+    </div>
+
+    <!-- Info Box -->
+    <div class="detail-info">
+      <div class="detail-category-badge">
+        <span>📦 <%= product.category || 'কম্পিউটার গ্যাজেট' %></span>
+      </div>
+
+      <h1 class="detail-title"><%= product.name %></h1>
+
+      <!-- Pricing Block -->
+      <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: <%= (typeof product.buyPrice !== 'undefined') ? '12px' : '0' %>;">
+          <span style="color: var(--accent-cyan); font-size: 20px; font-weight: 700;">৳</span>
+          <span style="font-family: var(--font-heading); font-size: 32px; font-weight: 800; color: #FFFFFF;">
+            <%= Number(product.sellPrice).toLocaleString('en-US') %>
+          </span>
+          <span style="color: var(--text-muted); font-size: 14px;">(বিক্রয় মূল্য)</span>
+        </div>
+
+        <% if (typeof product.buyPrice !== 'undefined') { %>
+          <!-- Admin & Reseller Exclusive Buy Price Highlighted in Red -->
+          <div style="background: rgba(239, 68, 68, 0.12); border: 1.5px solid rgba(239, 68, 68, 0.5); border-radius: 8px; padding: 12px 16px; display: flex; align-items: baseline; gap: 8px; box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);">
+            <span style="color: #EF4444; font-size: 20px; font-weight: 700;">৳</span>
+            <span style="font-family: var(--font-heading); font-size: 28px; font-weight: 900; color: #EF4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);">
+              <%= Number(product.buyPrice).toLocaleString('en-US') %>
+            </span>
+            <span style="color: #FCA5A5; font-size: 14px; font-weight: 700; margin-left: 4px;">(ক্রয় মূল্য)</span>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- Specs Table -->
+      <div class="detail-specs-table">
+        <div class="spec-row">
+          <span class="spec-label">স্টক স্ট্যাটাস</span>
+          <span class="spec-value">
+            <% if (product.stock > 5) { %>
+              <span style="color: #34D399;">🟢 পর্যাপ্ত স্টকে আছে (<%= product.stock %> পিস)</span>
+            <% } else if (product.stock > 0) { %>
+              <span style="color: #FBBF24;">🟡 সীমিত স্টক (মাত্র <%= product.stock %> পিস বাকি)</span>
+            <% } else { %>
+              <span style="color: #F87171;">🔴 স্টক আউট</span>
+            <% } %>
+          </span>
+        </div>
+
+        <% if (product.uniqueCode) { %>
+          <div class="spec-row">
+            <span class="spec-label">ইউনিক প্রোডাক্ট কোড</span>
+            <span class="spec-value" style="font-family: var(--font-mono); color: var(--accent-cyan); cursor: pointer;" data-code="<%= product.uniqueCode %>" onclick="copyCodeFromEl(this, event)">
+              #<%= product.uniqueCode %> 📋 (ক্লিক করে কপি করুন)
+            </span>
+          </div>
+        <% } %>
+
+        <div class="spec-row">
+          <span class="spec-label">ওয়ারেন্টি</span>
+          <span class="spec-value">১০০% অফিশিয়াল অথেনটিক প্রোডাক্ট</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px;">
+        <button 
+          type="button" 
+          class="btn" 
+          style="padding: 14px 20px; font-size: 16px;"
+          data-id="<%= product.id %>"
+          data-name="<%= product.name %>"
+          data-code="<%= product.uniqueCode || '' %>"
+          data-price="<%= product.sellPrice %>"
+          onclick="handleCardOrder(this)"
+        >
+          ⚡ এখনই অর্ডার করুন
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-whatsapp" 
+          style="padding: 14px 20px; font-size: 16px;"
+          data-name="<%= product.name %>"
+          data-code="<%= product.uniqueCode || '' %>"
+          data-price="<%= product.sellPrice %>"
+          onclick="handleCardWhatsApp(this)"
+        >
+          💬 WhatsApp-এ কিনুন
+        </button>
+      </div>
+
+      <!-- Description Box -->
+      <% if (product.description) { %>
+        <div style="margin-top: 32px;">
+          <h3 style="font-family: var(--font-heading); font-size: 18px; margin-bottom: 12px;">পণ্যের বিবরণ ও স্পেসিফিকেশন:</h3>
+          <div class="detail-desc-box">
+            <%= product.description %>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Related Products -->
+  <% if (typeof related !== 'undefined' && related.length > 0) { %>
+    <div style="margin-top: 48px; border-top: 1px solid var(--border-color); padding-top: 36px;">
+      <div class="section-header">
+        <h2 class="section-title">একই ক্যাটাগরির আরও পণ্য</h2>
+      </div>
+      <div class="product-grid">
+        <% related.forEach(function(p) { %>
+          <%- include('partials/product-card', { p: p }) %>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+</div>

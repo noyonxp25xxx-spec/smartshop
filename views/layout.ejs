@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <meta name="description" content="স্মার্ট কম্পিউটার শপ — প্রিমিয়াম টেক গ্যাজেট ও আইটি শপ।" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+  <link rel="alternate icon" type="image/png" href="/img/logo.png" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <!-- Top Ticker Bar -->
+  <div class="top-ticker">
+    <div class="wrap top-ticker-inner">
+      <div>
+        <span class="ticker-badge">🔥 হট অফার</span>
+        <span>সারাদেশে ক্যাশ অন ডেলিভারি এবং দ্রুততম হোম ডেলিভারি সুবিধা!</span>
+      </div>
+      <div style="display: flex; gap: 16px;">
+        <span class="hotline-link">📞 হটলাইন: ০১৭৪২-১৯২০২৬</span>
+      </div>
+  </div>
+
+  <!-- Main Sticky Header -->
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <!-- Brand Logo -->
+      <a href="/" class="brand" title="Smart Computer Shop">
+        <img src="/img/logo.svg" alt="Smart Computer Shop" class="brand-logo-img" onerror="this.onerror=null; this.src='/img/logo.png';" />
+      </a>
+
+      <!-- Quick Search in Header -->
+      <div class="header-search">
+        <form id="globalSearchForm" onsubmit="return false;">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="globalSearchInput" placeholder="পণ্য খুঁজুন বা ইউনিক কোড লিখুন (যেমন: ROG-G16)..." autocomplete="off" />
+            <button type="button" id="searchClearBtn" class="search-clear-btn">✕</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Navigation & Auth -->
+      <nav class="header-nav">
+        <a href="/" class="nav-link">🏠 হোম</a>
+        
+        <% if (user) { %>
+          <!-- Role Badge -->
+          <span class="user-badge role-<%= user.role %>">
+            <%= user.role === 'admin' ? '👑 অ্যাডমিন' : (user.role === 'reseller' ? '💼 রিসেলার' : '👤 গ্রাহক') %>
+          </span>
+
+          <% if (user.role === 'admin') { %>
+            <a href="/admin" class="nav-link nav-link-admin">⚙️ অ্যাডমিন প্যানেল</a>
+          <% } %>
+
+          <button id="logoutBtn" class="btn btn-secondary btn-small">লগআউট</button>
+        <% } else { %>
+          <a href="/login" class="btn btn-small">🔑 লগইন / সাইনআপ</a>
+        <% } %>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Page Content -->
+  <main class="page-main">
+    <%- body %>
+  </main>
+
+  <!-- Quick Order Modal -->
+  <div class="modal-backdrop" id="quickOrderModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeOrderModal()">✕</button>
+      <h3 style="font-family: var(--font-heading); font-size: 20px; margin-bottom: 6px;">🛒 সরাসরি অর্ডার করুন</h3>
+      <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;" id="modalProductSummary">পণ্য লোড হচ্ছে...</p>
+
+      <form id="orderForm" onsubmit="handleDirectOrder(event)">
+        <input type="hidden" id="orderProductId" />
+        <input type="hidden" id="orderProductName" />
+        <input type="hidden" id="orderProductCode" />
+        <input type="hidden" id="orderProductPrice" />
+
+        <div class="input-field">
+          <label class="input-label">আপনার নাম *</label>
+          <input type="text" class="input-control" id="orderCustName" required placeholder="আপনার পুরো নাম" />
+        </div>
+        <div class="input-field">
+          <label class="input-label">মোবাইল নাম্বার *</label>
+          <input type="tel" class="input-control" id="orderCustPhone" required placeholder="017XXXXXXXX" />
+        </div>
+        <div class="input-field">
+          <label class="input-label">ডেলিভারি ঠিকানা *</label>
+          <textarea class="input-control" id="orderCustAddress" rows="2" required placeholder="জেলা, থানা, বাড়ি/রোড নাম্বার"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button type="submit" class="btn" style="flex: 1;">নিশ্চিত করুন (ক্যাশ অন ডেলিভারি)</button>
+          <button type="button" onclick="orderViaWhatsApp()" class="btn btn-whatsapp">💬 WhatsApp</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="brand" style="margin-bottom: 16px;">
+            <img src="/img/logo.svg" alt="Smart Computer Shop" class="brand-logo-img" style="height: 48px;" onerror="this.onerror=null; this.src='/img/logo.png';" />
+          </div>
+          <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+            স্মার্ট কম্পিউটার শপ — ১০০% জেনুইন কম্পিউটার সামগ্রী, ল্যাপটপ, গেমিং গিয়ার ও এক্সেসরিজের বিশ্বস্ত প্রতিষ্ঠান।
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4>কুইক লিংক</h4>
+          <ul>
+            <li><a href="/">সব পণ্য</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>যোগাযোগ ও ঠিকানা</h4>
+          <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 8px;">
+            📍 স্মার্ট কম্পিউটার হাসপাতাল রোড পাবনা সদর ,পাবনা
+          </p>
+          <p style="color: var(--text-secondary); font-size: 14px;">
+            📞 ফোন: ০১৭৪২-১৯২০২৬<br />
+            ✉️ ইমেইল: support@smartcomputer.com
+          </p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 স্মার্ট কম্পিউটার শপ (Smart Computer Shop). সর্বস্বত্ব সংরক্ষিত।</div>
+        <div style="color: var(--accent-cyan); font-weight: 500;">⚡ Fast E-Commerce Experience</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Firebase Client + Auth Scripts -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    window.__firebaseConfig = <%- JSON.stringify(typeof firebaseClientConfig !== 'undefined' ? firebaseClientConfig : {}) %>;
+    if (window.__firebaseConfig && window.__firebaseConfig.apiKey) {
+      try {
+        const fbApp = initializeApp(window.__firebaseConfig);
+        window.__firebaseAuth = getAuth(fbApp);
+      } catch (e) {}
+    }
+
+    document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+      if (window.__firebaseAuth) {
+        try { await signOut(window.__firebaseAuth); } catch(e) {}
+      }
+      await fetch("/logout", { method: "POST" });
+      window.location.href = "/";
+    });
+  </script>
+  <script src="/js/app.js" defer></script>
+</body>
+</html>

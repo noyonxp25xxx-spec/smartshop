@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 90" fill="none" class="smart-shop-svg-logo">
+  <defs>
+    <!-- Gradient for Cart and 'S' -->
+    <linearGradient id="cyanBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F0FF" />
+      <stop offset="50%" stop-color="#00B4D8" />
+      <stop offset="100%" stop-color="#0077B6" />
+    </linearGradient>
+    
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00F0FF" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#0077B6" stop-opacity="0.2" />
+    </linearGradient>
+
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#E2E8F0" />
+    </linearGradient>
+
+    <filter id="cartGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- ICON SECTION -->
+  <g transform="translate(10, 8)">
+    <!-- Smart Wifi Signal Arcs on top of cart -->
+    <path d="M 28 22 A 18 18 0 0 1 52 22" stroke="url(#cyanBlueGrad)" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.6" />
+    <path d="M 20 15 A 28 28 0 0 1 60 15" stroke="url(#cyanBlueGrad)" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.9" />
+    <circle cx="60" cy="14" r="3.5" fill="#00F0FF" filter="url(#cartGlow)" />
+
+    <!-- Cart Basket Frame -->
+    <path d="M 8 28 L 18 28 L 30 60 L 68 60 L 76 35 L 22 35" 
+          stroke="url(#cyanBlueGrad)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+
+    <!-- Stylized 'S' Ribbon inside Cart -->
+    <path d="M 58 41 C 50 37, 36 38, 35 45 C 34 51, 62 48, 60 56 C 58 64, 30 64, 27 58" 
+          stroke="#00F0FF" stroke-width="4" stroke-linecap="round" fill="none" filter="url(#cartGlow)" />
+
+    <!-- Wheels -->
+    <circle cx="34" cy="70" r="5" fill="#00B4D8" stroke="#00F0FF" stroke-width="2.5" />
+    <circle cx="64" cy="70" r="5" fill="#00B4D8" stroke="#00F0FF" stroke-width="2.5" />
+  </g>
+
+  <!-- TEXT SECTION -->
+  <!-- Main Title: SMART COMPUTER -->
+  <text x="100" y="38" font-family="'Outfit', 'Hind Siliguri', sans-serif" font-weight="900" font-size="28" fill="url(#textGrad)" letter-spacing="1.5">
+    SMART
+  </text>
+  <text x="210" y="38" font-family="'Outfit', 'Hind Siliguri', sans-serif" font-weight="800" font-size="28" fill="#00F0FF" letter-spacing="1.5">
+    SHOP
+  </text>
+
+  <!-- Lightning indicator accent on the A -->
+  <path d="M 172 16 L 176 22 L 171 23 L 178 30" stroke="#00F0FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+
+  <!-- High-Tech Neon Progress Bar Under Title -->
+  <rect x="100" y="47" width="265" height="5" rx="2.5" fill="rgba(255,255,255,0.1)" stroke="url(#cyanBlueGrad)" stroke-width="1.2" />
+  <rect x="102" y="48.5" width="180" height="2" rx="1" fill="#00F0FF" filter="url(#cartGlow)" />
+  <polygon points="282,46.5 288,49.5 282,52.5" fill="#00F0FF" />
+
+  <!-- Subtitle -->
+  <text x="100" y="68" font-family="'Outfit', 'Hind Siliguri', sans-serif" font-weight="700" font-size="10.5" fill="#94A3B8" letter-spacing="2">
+    YOUR MODERN TECH &amp; IT PARTNER
+  </text>
+</svg>

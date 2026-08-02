@@ -1,0 +1,140 @@
+<div class="wrap">
+  <div class="admin-layout">
+    <%- include('../partials/admin-sidebar', { active: product ? 'products' : 'new-product' }) %>
+
+    <div>
+      <div style="margin-bottom: 24px;">
+        <h1 style="font-family: var(--font-heading); font-size: 26px; font-weight: 800;">
+          <%= product ? 'পণ্য এডিট করুন' : 'নতুন পণ্য যোগ করুন' %>
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 14px;">
+          পণ্যের বিবরণ, কোড, ক্রয়-বিক্রয় মূল্য এবং স্টক আপডেট করুন
+        </p>
+      </div>
+
+      <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 32px; max-width: 800px; box-shadow: var(--shadow-sm);">
+        <form id="productForm" enctype="multipart/form-data">
+          <!-- Product Name -->
+          <div class="input-field">
+            <label class="input-label">পণ্যের নাম *</label>
+            <input type="text" name="name" class="input-control" required placeholder="যেমন: ASUS ROG Gaming Laptop RTX 4060" value="<%= product ? product.name : '' %>" />
+          </div>
+
+          <!-- Category and Unique Code in a Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="input-field">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label class="input-label" style="margin: 0;">ক্যাটাগরি</label>
+                <a href="/admin/categories" target="_blank" style="font-size: 11px; color: var(--accent-cyan); text-decoration: underline;">⚙️ ক্যাটাগরি ম্যানেজ</a>
+              </div>
+              <select name="category" class="input-control">
+                <% if (typeof categories !== 'undefined' && categories && categories.length > 0) { %>
+                  <% categories.forEach(function(c) { %>
+                    <option value="<%= c.name %>" <%= product && product.category === c.name ? 'selected' : '' %>>
+                      <%= c.icon || '📦' %> <%= c.name %>
+                    </option>
+                  <% }) %>
+                <% } else { %>
+                  <option value="ল্যাপটপ" <%= product && product.category === 'ল্যাপটপ' ? 'selected' : '' %>>💻 ল্যাপটপ</option>
+                  <option value="প্রসেসর" <%= product && product.category === 'প্রসেসর' ? 'selected' : '' %>>⚡ প্রসেসর</option>
+                  <option value="মনিটর" <%= product && product.category === 'মনিটর' ? 'selected' : '' %>>🖥️ মনিটর</option>
+                  <option value="গেমিং গিয়ার" <%= product && product.category === 'গেমিং গিয়ার' ? 'selected' : '' %>>🎮 গেমিং গিয়ার</option>
+                  <option value="র‍্যাম ও এসএসডি" <%= product && product.category === 'র‍্যাম ও এসএসডি' ? 'selected' : '' %>>💾 র‍্যাম ও এসএসডি</option>
+                  <option value="গ্রাফিক্স কার্ড" <%= product && product.category === 'গ্রাফিক্স কার্ড' ? 'selected' : '' %>>🖥️ গ্রাফিক্স কার্ড</option>
+                  <option value="এক্সেসরিজ" <%= product && product.category === 'এক্সেসরিজ' ? 'selected' : '' %>>🔌 এক্সেসরিজ</option>
+                <% } %>
+              </select>
+            </div>
+
+            <div class="input-field">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label class="input-label" style="margin: 0;">ইউনিক কোড (ডিফল্ট বড় হাতের)</label>
+                <button type="button" class="quick-tag-btn" style="font-size: 11px;" onclick="generateRandomCode()">🎲 অটো কোড</button>
+              </div>
+              <input type="text" id="uniqueCodeInput" name="uniqueCode" class="input-control" style="text-transform: uppercase; font-family: var(--font-mono); font-weight: 700; letter-spacing: 1px;" placeholder="যেমন: ROG-G16-4060" value="<%= product ? (product.uniqueCode || '') : '' %>" oninput="this.value = this.value.toUpperCase()" />
+            </div>
+          </div>
+
+          <!-- Pricing: Buy Price, Sell Price, Stock -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+            <div class="input-field">
+              <label class="input-label" style="color: #F87171; font-weight: 700;">ক্রয় মূল্য (৳)</label>
+              <input type="number" id="buyPriceInput" name="buyPrice" class="input-control" step="0.01" placeholder="অ্যাডমিন ও রিসেলারদের জন্য" value="<%= product ? product.buyPrice : '' %>" />
+            </div>
+
+            <div class="input-field">
+              <label class="input-label">বিক্রয় মূল্য (৳) *</label>
+              <input type="number" id="sellPriceInput" name="sellPrice" class="input-control" step="0.01" required placeholder="সাধারণ গ্রাহকদের জন্য" value="<%= product ? product.sellPrice : '' %>" />
+            </div>
+
+            <div class="input-field">
+              <label class="input-label">স্টক (পিস) *</label>
+              <input type="number" name="stock" class="input-control" required placeholder="0" value="<%= product ? product.stock : 10 %>" />
+            </div>
+          </div>
+
+          <!-- Product Image -->
+          <div class="input-field">
+            <label class="input-label">ছবি আপলোড অথবা ইমেজ URL</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 8px;">
+              <input type="file" name="image" id="imageFileInput" class="input-control" accept="image/*" onchange="previewSelectedImage(event)" />
+              <input type="url" name="imageUrlInput" id="imageUrlInput" class="input-control" placeholder="বা অনলাইন ইমেজ লিংক দিন..." value="<%= product ? product.imageUrl : '' %>" oninput="previewUrlImage()" />
+            </div>
+            <div id="imagePreviewContainer" style="margin-top: 10px; display: <%= product && product.imageUrl ? 'block' : 'none' %>;">
+              <img id="imgPreview" src="<%= product ? product.imageUrl : '' %>" alt="Preview" style="max-height: 140px; border-radius: 8px; border: 1px solid var(--border-color); object-fit: cover;" />
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="input-field">
+            <label class="input-label">পণ্যের স্পেসিফিকেশন ও বিবরণ</label>
+            <textarea name="description" class="input-control" rows="4" placeholder="প্রসেসর, র‍্যাম, স্টোরেজ, ডিসপ্লে ও অন্যান্য বিবরণ লিখুন..."><%= product ? (product.description || '') : '' %></textarea>
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn" id="submitBtn" style="padding: 12px 28px; font-size: 15px;">
+              💾 <%= product ? 'পণ্য আপডেট করুন' : 'পণ্য প্রকাশ করুন' %>
+            </button>
+            <a href="/admin/products" class="btn btn-secondary">বাতিল</a>
+          </div>
+
+          <div class="auth-msg" id="formMsg"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.__editProductId = <%- product ? JSON.stringify(product.id) : 'null' %>;
+
+  function generateRandomCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = 'SC-';
+    for (let i = 0; i < 5; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    document.getElementById('uniqueCodeInput').value = code;
+  }
+
+  function previewSelectedImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('imgPreview').src = e.target.result;
+        document.getElementById('imagePreviewContainer').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function previewUrlImage() {
+    const url = document.getElementById('imageUrlInput').value.trim();
+    if (url) {
+      document.getElementById('imgPreview').src = url;
+      document.getElementById('imagePreviewContainer').style.display = 'block';
+    }
+  }
+</script>
+<script src="/js/admin.js" defer></script>

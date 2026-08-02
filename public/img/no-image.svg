@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#EDEAE1"/>
+  <rect x="1" y="1" width="398" height="298" fill="none" stroke="#C9C2AF" stroke-width="2"/>
+  <g transform="translate(200,150)" fill="none" stroke="#A9822F" stroke-width="3">
+    <rect x="-50" y="-38" width="100" height="76" rx="4"/>
+    <circle cx="0" cy="-4" r="16"/>
+    <path d="M-50 30 L-15 -2 L10 20 L30 2 L50 24" />
+  </g>
+  <text x="200" y="230" text-anchor="middle" font-family="monospace" font-size="13" fill="#4B564E">ছবি নেই</text>
+</svg>

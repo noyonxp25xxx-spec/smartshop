@@ -1,0 +1,72 @@
+<!-- Hero Banner Section -->
+<section class="hero-section" style="padding: 40px 0 28px;">
+  <div class="wrap hero-content">
+    <div class="hero-chip">
+      <span>🚀 সুপার ফাস্ট ই-কমার্স ও আইটি শপ</span>
+    </div>
+    <h1 class="hero-title" style="margin-bottom: 24px;">
+      স্মার্ট কম্পিউটার ও <span>টেক গ্যাজেট হাব</span>
+    </h1>
+
+    <!-- Big Live Search Box -->
+    <form class="hero-search-box" id="heroSearchForm" onsubmit="return false;" style="margin-bottom: 0;">
+      <input 
+        type="text" 
+        id="heroSearchInput" 
+        class="hero-search-input" 
+        placeholder="পণ্যের নাম অথবা ইউনিক কোড লিখুন..." 
+        autocomplete="off"
+      />
+      <button type="button" id="heroSearchBtn" class="btn hero-search-btn">
+        🔍 খুঁজুন
+      </button>
+    </form>
+  </div>
+</section>
+
+<!-- Category Filter Pills Bar -->
+<div class="wrap">
+  <div class="categories-bar">
+    <div class="categories-list">
+      <a href="/" class="category-pill <%= !selectedCategory ? 'active' : '' %>">
+        ⚡ সব ক্যাটাগরি
+      </a>
+      <% if (typeof categories !== 'undefined' && categories) { %>
+        <% categories.forEach(function(cat) { 
+             const catName = typeof cat === 'object' ? cat.name : cat;
+             const catIcon = typeof cat === 'object' ? (cat.icon || '📦') : '📦';
+        %>
+          <a href="/?category=<%= encodeURIComponent(catName) %>" class="category-pill <%= selectedCategory === catName ? 'active' : '' %>">
+            <%= catIcon %> <%= catName %>
+          </a>
+        <% }) %>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Store Section Header -->
+  <div class="section-header">
+    <h2 class="section-title">
+      <%= selectedCategory ? selectedCategory : 'আমাদের সকল পণ্য ও স্টক' %>
+    </h2>
+    <div class="product-count-badge" id="productCountBadge">
+      মোট <%= products.length %> টি আইটেম
+    </div>
+  </div>
+
+  <!-- Search Info Banner -->
+  <div id="resultsInfo" style="margin-bottom: 16px;"></div>
+
+  <!-- Product Grid -->
+  <div class="product-grid" id="productGrid">
+    <% if (products.length === 0) { %>
+      <div class="empty-state">
+        <h3>কোনো পণ্য পাওয়া যায়নি</h3>
+        <p style="margin-top: 8px;">অন্য কোনো নাম অথবা কোড লিখে আবার চেষ্টা করুন।</p>
+      </div>
+    <% } %>
+    <% products.forEach(function(p) { %>
+      <%- include('partials/product-card', { p: p }) %>
+    <% }) %>
+  </div>
+</div>

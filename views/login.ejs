@@ -1,0 +1,162 @@
+<div class="auth-page-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <a href="/" style="display: inline-block; margin-bottom: 8px;">
+        <img src="/img/logo.svg" alt="Smart Shop" class="brand-logo-img" style="height: 52px;" onerror="this.onerror=null; this.src='/img/logo.png';" />
+      </a>
+      <p class="auth-subtitle">রিসেলার, অ্যাডমিন বা গ্রাহক হিসেবে প্রবেশ করুন</p>
+    </div>
+
+    <!-- Tabs: Login / Register -->
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab-btn active" id="tabLogin" onclick="switchAuthTab('login')">লগইন</button>
+      <button type="button" class="auth-tab-btn" id="tabRegister" onclick="switchAuthTab('register')">নতুন একাউন্ট</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+      <div class="input-field">
+        <label class="input-label">ইমেইল এড্রেস</label>
+        <input type="email" id="loginEmail" class="input-control" required placeholder="name@domain.com" autocomplete="username" />
+      </div>
+
+      <div class="input-field">
+        <label class="input-label">পাসওয়ার্ড</label>
+        <input type="password" id="loginPassword" class="input-control" required placeholder="••••••••" autocomplete="current-password" />
+      </div>
+
+      <button type="submit" class="btn" id="loginSubmitBtn" style="width: 100%; margin-top: 10px;">
+        🔑 প্রবেশ করুন
+      </button>
+
+
+    </form>
+
+    <!-- REGISTER FORM (Hidden by default) -->
+    <form id="registerForm" style="display: none;" onsubmit="handleRegisterSubmit(event)">
+      <div class="input-field">
+        <label class="input-label">আপনার নাম</label>
+        <input type="text" id="regName" class="input-control" required placeholder="পুরো নাম লিখুন" />
+      </div>
+
+      <div class="input-field">
+        <label class="input-label">ইমেইল এড্রেস</label>
+        <input type="email" id="regEmail" class="input-control" required placeholder="name@domain.com" />
+      </div>
+
+      <div class="input-field">
+        <label class="input-label">মোবাইল নাম্বার</label>
+        <input type="tel" id="regPhone" class="input-control" placeholder="017XXXXXXXX" />
+      </div>
+
+      <div class="input-field">
+        <label class="input-label">পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)</label>
+        <input type="password" id="regPassword" class="input-control" required minlength="6" placeholder="••••••••" />
+      </div>
+
+      <button type="submit" class="btn" id="registerSubmitBtn" style="width: 100%; margin-top: 10px;">
+        ✨ নতুন একাউন্ট তৈরি করুন
+      </button>
+    </form>
+
+    <div class="auth-msg" id="authMsg"></div>
+  </div>
+</div>
+
+<script>
+  const nextRedirect = <%- JSON.stringify(next || '/') %>;
+
+  function switchAuthTab(tab) {
+    const isLogin = tab === 'login';
+    document.getElementById('tabLogin').classList.toggle('active', isLogin);
+    document.getElementById('tabRegister').classList.toggle('active', !isLogin);
+    document.getElementById('loginForm').style.display = isLogin ? 'block' : 'none';
+    document.getElementById('registerForm').style.display = isLogin ? 'none' : 'block';
+    hideMsg();
+  }
+
+  function showMsg(text, isOk) {
+    const el = document.getElementById('authMsg');
+    el.textContent = text;
+    el.className = 'auth-msg ' + (isOk ? 'ok' : 'error');
+  }
+
+  function hideMsg() {
+    const el = document.getElementById('authMsg');
+    el.className = 'auth-msg';
+    el.textContent = '';
+  }
+
+  async function handleLoginSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('loginSubmitBtn');
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    btn.disabled = true;
+    btn.textContent = 'যাচাই করা হচ্ছে...';
+    hideMsg();
+
+    try {
+      // 1. Direct server login
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        showMsg('লগইন সফল হয়েছে! ড্যাশবোর্ডে নিয়ে যাওয়া হচ্ছে...', true);
+        setTimeout(() => {
+          window.location.href = data.redirect || nextRedirect || '/';
+        }, 500);
+        return;
+      }
+
+      // If server returned error, show message
+      showMsg(data.error || 'ইমেইল বা পাসওয়ার্ড ভুল হয়েছে।', false);
+    } catch (err) {
+      showMsg('নেটওয়ার্ক সমস্যা, দয়া করে আবার চেষ্টা করুন।', false);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🔑 প্রবেশ করুন';
+    }
+  }
+
+  async function handleRegisterSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('registerSubmitBtn');
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const phone = document.getElementById('regPhone').value.trim();
+    const password = document.getElementById('regPassword').value;
+
+    btn.disabled = true;
+    btn.textContent = 'একাউন্ট তৈরি হচ্ছে...';
+    hideMsg();
+
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, phone, password })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        showMsg('অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!', true);
+        setTimeout(() => {
+          window.location.href = data.redirect || '/';
+        }, 600);
+      } else {
+        showMsg(data.error || 'অ্যাকাউন্ট তৈরি ব্যর্থ হয়েছে।', false);
+      }
+    } catch (err) {
+      showMsg('সার্ভারে সমস্যা হয়েছে।', false);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '✨ নতুন একাউন্ট তৈরি করুন';
+    }
+  }
+</script>

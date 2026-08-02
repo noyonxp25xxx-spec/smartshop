@@ -1,0 +1,69 @@
+<%
+  const stockClass = p.stock <= 0 ? 'stock-out' : (p.stock <= 5 ? 'stock-low' : 'stock-in');
+  const stockLabel = p.stock <= 0 ? '🔴 স্টক শেষ' : (p.stock <= 5 ? '🟡 মাত্র ' + p.stock + 'টি বাকি' : '🟢 স্টকে আছে (' + p.stock + ')');
+%>
+<div class="product-card">
+  <!-- Top Badges -->
+  <div class="card-top-badges">
+    <% if (p.uniqueCode) { %>
+      <div class="unique-code-pill" title="ইউনিক কোড" data-code="<%= p.uniqueCode %>" onclick="copyCodeFromEl(this, event)">
+        #<%= p.uniqueCode %> 📋
+      </div>
+    <% } else { %>
+      <div></div>
+    <% } %>
+    <div class="stock-status-pill <%= stockClass %>"><%= stockLabel %></div>
+  </div>
+
+  <!-- Product Image -->
+  <a href="/product/<%= p.id %>" class="card-img-wrap">
+    <img src="<%= p.imageUrl %>" alt="<%= p.name %>" loading="lazy" />
+  </a>
+
+  <!-- Card Body -->
+  <div class="card-body">
+    <div class="card-category"><%= p.category || 'কম্পিউটার গ্যাজেট' %></div>
+    <a href="/product/<%= p.id %>" class="card-title" title="<%= p.name %>"><%= p.name %></a>
+
+    <!-- Pricing Area -->
+    <div class="card-price-box">
+      <div class="price-primary">
+        <span class="currency-sym">৳</span>
+        <span class="price-amount"><%= Number(p.sellPrice).toLocaleString('en-US') %></span>
+      </div>
+
+      <% if (typeof p.buyPrice !== 'undefined') { %>
+        <!-- Reseller / Admin Exclusive Buy Price Tag Highlighted in Red -->
+        <div class="reseller-price-tag" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); justify-content: flex-start; gap: 6px; padding: 6px 10px;">
+          <span style="color: #FCA5A5; font-size: 12px; font-weight: 700;">ক্রয় মূল্য:</span>
+          <span style="color: #EF4444; font-family: var(--font-heading); font-size: 16px; font-weight: 800;">৳<%= Number(p.buyPrice).toLocaleString('en-US') %></span>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Quick Buy Buttons using data attributes -->
+    <div class="card-actions">
+      <button 
+        type="button" 
+        class="btn btn-secondary"
+        data-id="<%= p.id %>"
+        data-name="<%= p.name %>"
+        data-code="<%= p.uniqueCode || '' %>"
+        data-price="<%= p.sellPrice %>"
+        onclick="handleCardOrder(this)"
+      >
+        ⚡ অর্ডার
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-whatsapp"
+        data-name="<%= p.name %>"
+        data-code="<%= p.uniqueCode || '' %>"
+        data-price="<%= p.sellPrice %>"
+        onclick="handleCardWhatsApp(this)"
+      >
+        💬 চ্যাট
+      </button>
+    </div>
+  </div>
+</div>

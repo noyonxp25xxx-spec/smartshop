@@ -1,0 +1,103 @@
+{
+  "products": [
+    {
+      "id": "prod-1785690325077",
+      "name": "CHARGER",
+      "category": "CHARGER",
+      "uniqueCode": "DDA",
+      "buyPrice": 1100,
+      "sellPrice": 1600,
+      "stock": 100,
+      "description": "",
+      "imageUrl": "/uploads/product-1785690325075-901854305.webp",
+      "createdAt": "2026-08-02T17:05:25.077Z",
+      "updatedAt": "2026-08-02T17:05:25.077Z"
+    },
+    {
+      "id": "prod-1785688451341",
+      "name": "charger",
+      "category": "এক্সেসরিজ",
+      "uniqueCode": "ABX",
+      "buyPrice": 120,
+      "sellPrice": 250,
+      "stock": 10,
+      "description": "High quality fast charger for laptops and mobile devices.",
+      "imageUrl": "/uploads/product-1785689940575-185351603.webp",
+      "createdAt": "2026-08-02T16:34:11.341Z",
+      "updatedAt": "2026-08-02T16:59:00.580Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat-4",
+      "name": "গেমিং গিয়ার",
+      "icon": "🎮",
+      "createdAt": "2026-08-02T16:58:10.937Z"
+    },
+    {
+      "id": "cat-7",
+      "name": "এক্সেসরিজ",
+      "icon": "🔌",
+      "createdAt": "2026-08-02T16:58:10.937Z"
+    },
+    {
+      "id": "cat-1785689921187",
+      "name": "স্মার্ট ওয়াচ ও ব্যান্ড",
+      "icon": "⌚",
+      "createdAt": "2026-08-02T16:58:41.187Z",
+      "updatedAt": "2026-08-02T16:58:41.191Z"
+    },
+    {
+      "id": "cat-1785690244521",
+      "name": "headphone",
+      "icon": "🎧",
+      "createdAt": "2026-08-02T17:04:04.521Z",
+      "updatedAt": "2026-08-02T17:04:04.521Z"
+    },
+    {
+      "id": "cat-1785690256654",
+      "name": "CHARGER",
+      "icon": "🔌",
+      "createdAt": "2026-08-02T17:04:16.654Z",
+      "updatedAt": "2026-08-02T17:04:16.654Z"
+    }
+  ],
+  "users": [
+    {
+      "uid": "admin-noyon-uid",
+      "email": "noyonxp25@gmail.com",
+      "name": "Noyon (Admin)",
+      "role": "admin",
+      "passwordHash": "934430d20d420275208719008370af8f889f426c44f576037cb4d5d07f5f7a1a",
+      "updatedAt": "2026-08-02T16:59:55.889Z",
+      "createdAt": "2026-08-02T16:27:22.213Z"
+    },
+    {
+      "uid": "g2QYtt73HBSJGWKjA97YJyuHHl83",
+      "email": "mastercomputer2525@gmail.com",
+      "name": "mastercomputer2525@gmail.com",
+      "role": "customer",
+      "passwordHash": null,
+      "updatedAt": "2026-08-02T17:16:21.681Z",
+      "createdAt": "2026-08-02T16:27:57.015Z"
+    },
+    {
+      "uid": "usr-1785689048242",
+      "email": "b@gmail.com",
+      "name": "sammm",
+      "role": "customer",
+      "passwordHash": "934430d20d420275208719008370af8f889f426c44f576037cb4d5d07f5f7a1a",
+      "updatedAt": "2026-08-02T17:16:53.227Z",
+      "createdAt": "2026-08-02T16:44:08.242Z"
+    },
+    {
+      "uid": "usr-1785691580075",
+      "email": "smartshop@gmail.com",
+      "name": "ARIF HOSSAIN",
+      "role": "admin",
+      "passwordHash": "934430d20d420275208719008370af8f889f426c44f576037cb4d5d07f5f7a1a",
+      "updatedAt": "2026-08-02T17:26:42.387Z",
+      "createdAt": "2026-08-02T17:26:20.075Z"
+    }
+  ]
+}

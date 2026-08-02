@@ -1,0 +1,242 @@
+<div class="wrap">
+  <div class="admin-layout">
+    <%- include('../partials/admin-sidebar', { active: 'categories' }) %>
+
+    <div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 14px;">
+        <div>
+          <h1 style="font-family: var(--font-heading); font-size: 26px; font-weight: 800;">
+            📁 ক্যাটাগরি ম্যানেজমেন্ট
+          </h1>
+          <p style="color: var(--text-secondary); font-size: 14px;">
+            দোকানের সকল পণ্যের ক্যাটাগরি যোগ, পরিবর্তন বা মুছে ফেলুন।
+          </p>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 360px 1fr; gap: 24px; align-items: start;">
+        
+        <!-- Left: Add / Edit Category Form -->
+        <div class="auth-card" style="margin: 0; padding: 24px; border: 1px solid var(--border-color); background: var(--bg-card); position: sticky; top: 100px;">
+          <h2 id="catFormTitle" style="font-family: var(--font-heading); font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <span>➕</span> নতুন ক্যাটাগরি যোগ করুন
+          </h2>
+
+          <div id="catMsg" class="auth-msg" style="display: none; margin-bottom: 14px;"></div>
+
+          <form id="categoryForm">
+            <input type="hidden" id="editCatId" value="" />
+
+            <div class="input-field">
+              <label class="input-label">ক্যাটাগরির নাম *</label>
+              <input 
+                type="text" 
+                id="catNameInput" 
+                class="input-control" 
+                placeholder="যেমন: ল্যাপটপ বা স্পিকার" 
+                required 
+              />
+            </div>
+
+            <div class="input-field">
+              <label class="input-label">আইকন / ইমোজি</label>
+              <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                <input 
+                  type="text" 
+                  id="catIconInput" 
+                  class="input-control" 
+                  style="width: 70px; text-align: center; font-size: 20px;" 
+                  value="📦" 
+                  maxlength="4" 
+                />
+                <div style="font-size: 12px; color: var(--text-muted); align-self: center;">
+                  পাশের বক্স থেকে দ্রুত ইমোজি নির্বাচন করুন 👇
+                </div>
+              </div>
+
+              <!-- Quick Emoji Palette -->
+              <div style="display: flex; flex-wrap: wrap; gap: 6px; background: var(--bg-surface); padding: 8px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <% const icons = ['💻', '⚡', '🖥️', '🎮', '💾', '🔌', '📦', '🎧', '📱', '⌨️', '🖱️', '🔋', '🖨️', '📷', '🕹️', '🛡️']; %>
+                <% icons.forEach(function(ico) { %>
+                  <button type="button" class="quick-tag-btn" style="font-size: 16px; padding: 4px 8px;" onclick="selectEmoji('<%= ico %>')"><%= ico %></button>
+                <% }) %>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+              <button type="submit" id="catSubmitBtn" class="btn" style="flex: 1;">
+                💾 সংরক্ষণ করুন
+              </button>
+              <button type="button" id="catCancelBtn" class="btn btn-secondary" style="display: none;" onclick="cancelEditMode()">
+                বাতিল
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Right: Category List Table -->
+        <div>
+          <div class="table-responsive">
+            <table class="admin-table" id="categoriesTable">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">আইকন</th>
+                  <th>ক্যাটাগরির নাম</th>
+                  <th>পণ্য সংখ্যা</th>
+                  <th style="text-align: right;">অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% categories.forEach(function(c) { %>
+                  <tr id="row-cat-<%= c.id %>">
+                    <td style="font-size: 24px; text-align: center;">
+                      <span id="icon-<%= c.id %>"><%= c.icon || '📦' %></span>
+                    </td>
+                    <td>
+                      <strong style="font-size: 15px;" id="name-<%= c.id %>"><%= c.name %></strong>
+                    </td>
+                    <td>
+                      <span style="background: rgba(0, 210, 255, 0.12); color: var(--accent-cyan); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700;">
+                        📦 <%= c.productCount || 0 %> টি পণ্য
+                      </span>
+                    </td>
+                    <td style="text-align: right; white-space: nowrap;">
+                      <button 
+                        type="button" 
+                        class="btn btn-secondary btn-small" 
+                        style="margin-right: 4px;"
+                        onclick="startEditCat('<%= c.id %>', '<%= c.name %>', '<%= c.icon || '📦' %>')"
+                      >
+                        ✏️ এডিট
+                      </button>
+                      <button 
+                        type="button" 
+                        class="btn btn-danger btn-small"
+                        onclick="deleteCategory('<%= c.id %>', '<%= c.name %>', <%= c.productCount || 0 %>)"
+                      >
+                        🗑️ মুছুন
+                      </button>
+                    </td>
+                  </tr>
+                <% }) %>
+
+                <% if (categories.length === 0) { %>
+                  <tr>
+                    <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                      কোনো ক্যাটাগরি তৈরি করা হয়নি।
+                    </td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin.js" defer></script>
+<script>
+  function selectEmoji(emoji) {
+    document.getElementById('catIconInput').value = emoji;
+  }
+
+  function startEditCat(id, name, icon) {
+    document.getElementById('editCatId').value = id;
+    document.getElementById('catNameInput').value = name;
+    document.getElementById('catIconInput').value = icon;
+    document.getElementById('catFormTitle').innerHTML = '<span>✏️</span> ক্যাটাগরি এডিট করুন';
+    document.getElementById('catSubmitBtn').textContent = '💾 আপডেট করুন';
+    document.getElementById('catCancelBtn').style.display = 'inline-flex';
+    document.getElementById('catNameInput').focus();
+  }
+
+  function cancelEditMode() {
+    document.getElementById('editCatId').value = '';
+    document.getElementById('catNameInput').value = '';
+    document.getElementById('catIconInput').value = '📦';
+    document.getElementById('catFormTitle').innerHTML = '<span>➕</span> নতুন ক্যাটাগরি যোগ করুন';
+    document.getElementById('catSubmitBtn').textContent = '💾 সংরক্ষণ করুন';
+    document.getElementById('catCancelBtn').style.display = 'none';
+    const msg = document.getElementById('catMsg');
+    if (msg) msg.style.display = 'none';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('categoryForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editCatId').value;
+      const name = document.getElementById('catNameInput').value.trim();
+      const icon = document.getElementById('catIconInput').value.trim() || '📦';
+      const msg = document.getElementById('catMsg');
+      const btn = document.getElementById('catSubmitBtn');
+
+      if (!name) return;
+
+      btn.disabled = true;
+      btn.textContent = 'সংরক্ষণ হচ্ছে...';
+
+      const isEdit = !!id;
+      const url = isEdit ? `/admin/api/categories/${id}` : `/admin/api/categories`;
+      const method = isEdit ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, icon })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          msg.textContent = isEdit ? 'ক্যাটাগরি সফলভাবে আপডেট করা হয়েছে!' : 'নতুন ক্যাটাগরি সফলভাবে যোগ করা হয়েছে!';
+          msg.className = 'auth-msg ok';
+          msg.style.display = 'block';
+
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        } else {
+          msg.textContent = data.error || 'সমস্যা হয়েছে।';
+          msg.className = 'auth-msg error';
+          msg.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = isEdit ? '💾 আপডেট করুন' : '💾 সংরক্ষণ করুন';
+        }
+      } catch (err) {
+        msg.textContent = 'নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।';
+        msg.className = 'auth-msg error';
+        msg.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = isEdit ? '💾 আপডেট করুন' : '💾 সংরক্ষণ করুন';
+      }
+    });
+  });
+
+  async function deleteCategory(id, name, productCount) {
+    let warning = `আপনি কি নিশ্চিতভাবে "${name}" ক্যাটাগরি মুছে ফেলতে চান?`;
+    if (productCount > 0) {
+      warning += `\n⚠️ সতর্কতা: এই ক্যাটাগরির অধীনে ${productCount} টি পণ্য রয়েছে!`;
+    }
+    if (!confirm(warning)) return;
+
+    try {
+      const res = await fetch(`/admin/api/categories/${id}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        alert(data.error || 'ক্যাটাগরি মুছতে সমস্যা হয়েছে।');
+      }
+    } catch (e) {
+      alert('নেটওয়ার্ক সমস্যা।');
+    }
+  }
+</script>

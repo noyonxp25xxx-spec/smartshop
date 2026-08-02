@@ -1,0 +1,109 @@
+<div class="wrap">
+  <div class="admin-layout">
+    <%- include('../partials/admin-sidebar', { active: 'dashboard' }) %>
+
+    <div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 14px;">
+        <div>
+          <h1 style="font-family: var(--font-heading); font-size: 26px; font-weight: 800;">
+            অ্যাডমিন ড্যাশবোর্ড
+          </h1>
+          <p style="color: var(--text-secondary); font-size: 14px;">
+            স্মার্ট কম্পিউটার শপের সার্বিক স্টক, রিসেলার ও সেলস ওভারভিউ
+          </p>
+        </div>
+        <a href="/admin/products/new" class="btn">
+          ➕ নতুন পণ্য যোগ করুন
+        </a>
+      </div>
+
+      <!-- Metrics Grid -->
+      <div class="metrics-grid">
+        <div class="metric-card" style="border-top: 3px solid var(--accent-cyan);">
+          <div class="metric-val"><%= stats.totalProducts %></div>
+          <div class="metric-label">📦 মোট পণ্য আইটেম</div>
+        </div>
+
+        <div class="metric-card" style="border-top: 3px solid var(--accent-emerald);">
+          <div class="metric-val"><%= stats.totalStock %></div>
+          <div class="metric-label">🔢 মোট স্টক কোয়ান্টিটি (পিস)</div>
+        </div>
+
+        <div class="metric-card" style="border-top: 3px solid var(--accent-blue);">
+          <div class="metric-val">৳<%= Number(stats.totalInventoryValue).toLocaleString('en-US') %></div>
+          <div class="metric-label">💰 মোট ইনভেন্টরি ভ্যালু</div>
+        </div>
+
+        <div class="metric-card" style="border-top: 3px solid var(--accent-rose);">
+          <div class="metric-val" style="color: <%= stats.lowStock > 0 ? '#F87171' : '#FFFFFF' %>">
+            <%= stats.lowStock %>
+          </div>
+          <div class="metric-label">⚠️ কম স্টকে থাকা পণ্য (≤৫)</div>
+        </div>
+
+        <div class="metric-card" style="border-top: 3px solid var(--accent-purple);">
+          <div class="metric-val"><%= stats.resellersCount %></div>
+          <div class="metric-label">💼 রেজিস্টার্ড রিসেলার</div>
+        </div>
+      </div>
+
+      <!-- Recent Products Section -->
+      <div style="margin-top: 32px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="font-family: var(--font-heading); font-size: 18px; font-weight: 700;">
+            সম্প্রতি যোগ করা পণ্য
+          </h3>
+          <a href="/admin/products" style="color: var(--accent-cyan); font-size: 14px; font-weight: 600;">
+            সব পণ্য দেখুন →
+          </a>
+        </div>
+
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ছবি</th>
+                <th>পণ্যের নাম</th>
+                <th>কোড</th>
+                <th>বিক্রয় মূল্য</th>
+                <th>স্টক</th>
+                <th>অ্যাকশন</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% recentProducts.forEach(function(p) { %>
+                <tr>
+                  <td style="width: 50px;">
+                    <img src="<%= p.imageUrl %>" alt="<%= p.name %>" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color);" />
+                  </td>
+                  <td>
+                    <strong><%= p.name %></strong><br />
+                    <span style="color: var(--text-muted); font-size: 12px;"><%= p.category %></span>
+                  </td>
+                  <td>
+                    <% if (p.uniqueCode) { %>
+                      <code style="background: rgba(0, 210, 255, 0.15); color: var(--accent-cyan); padding: 2px 6px; border-radius: 4px;">#<%= p.uniqueCode %></code>
+                    <% } else { %>-<% } %>
+                  </td>
+                  <td style="font-weight: 700; color: #FFFFFF;">৳<%= Number(p.sellPrice).toLocaleString('en-US') %></td>
+                  <td>
+                    <div class="stock-stepper">
+                      <button type="button" class="stock-step-btn" onclick="adjustStock('<%= p.id %>', -1, this)">−</button>
+                      <span class="stock-num" id="stock-val-<%= p.id %>"><%= p.stock %></span>
+                      <button type="button" class="stock-step-btn" onclick="adjustStock('<%= p.id %>', 1, this)">+</button>
+                    </div>
+                  </td>
+                  <td>
+                    <a href="/admin/products/<%= p.id %>/edit" class="btn btn-secondary btn-small">এডিট</a>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin.js" defer></script>

@@ -1,0 +1,59 @@
+<div class="wrap">
+  <div class="admin-layout">
+    <%- include('../partials/admin-sidebar', { active: 'users' }) %>
+
+    <div>
+      <div style="margin-bottom: 24px;">
+        <h1 style="font-family: var(--font-heading); font-size: 26px; font-weight: 800;">
+          ইউজার ও রিসেলার রোল ম্যানেজমেন্ট
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 14px;">
+          ব্যবহারকারীদের রোল পরিবর্তন করে রিসেলার (পাইকারি মূল্য দেখার অনুমতি) বা অ্যাডমিন তৈরি করুন।
+        </p>
+      </div>
+
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>নাম</th>
+              <th>ইমেইল এড্রেস</th>
+              <th>বর্তমান রোল</th>
+              <th>রোল পরিবর্তন করুন</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% users.forEach(function(u) { %>
+              <tr>
+                <td>
+                  <strong><%= u.name || 'ইউজার' %></strong>
+                </td>
+                <td style="font-family: var(--font-mono); color: var(--accent-cyan);">
+                  <%= u.email %>
+                </td>
+                <td>
+                  <span class="user-badge role-<%= u.role %>" id="badge-<%= u.uid %>">
+                    <%= u.role === 'admin' ? '👑 Admin' : (u.role === 'reseller' ? '💼 Reseller' : '👤 Customer') %>
+                  </span>
+                </td>
+                <td>
+                  <% if (u.email.toLowerCase() === 'noyonxp25@gmail.com') { %>
+                    <span style="color: #FCD34D; font-size: 12px; font-weight: 600;">👑 মেইন সুপার অ্যাডমিন</span>
+                  <% } else { %>
+                    <select class="input-control" style="padding: 6px 10px; font-size: 13px; width: auto;" onchange="changeUserRole('<%= u.uid %>', this.value)">
+                      <option value="customer" <%= u.role === 'customer' ? 'selected' : '' %>>👤 Customer (সাধারণ)</option>
+                      <option value="reseller" <%= u.role === 'reseller' ? 'selected' : '' %>>💼 Reseller (রিসেলার)</option>
+                      <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>👑 Admin (অ্যাডমিন)</option>
+                    </select>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin.js" defer></script>
