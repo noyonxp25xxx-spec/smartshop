@@ -75,10 +75,10 @@
 
           <!-- Product Image -->
           <div class="input-field">
-            <label class="input-label">ছবি আপলোড অথবা ইমেজ URL</label>
+            <label class="input-label">ছবি আপলোড অথবা ইমেজ URL (যেকোনো একটি)</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 8px;">
               <input type="file" name="image" id="imageFileInput" class="input-control" accept="image/*" onchange="previewSelectedImage(event)" />
-              <input type="text" name="imageUrlInput" id="imageUrlInput" class="input-control" placeholder="বা অনলাইন ইমেজ লিংক দিন..." value="<%= product ? product.imageUrl : '' %>" oninput="previewUrlImage()" />
+              <input type="text" name="imageUrlInput" id="imageUrlInput" class="input-control" placeholder="এখানে ইমেজের লিংক পেস্ট করুন (Paste Here)..." value="<%= product ? product.imageUrl : '' %>" oninput="previewUrlImage()" />
             </div>
             <div id="imagePreviewContainer" style="margin-top: 10px; display: <%= product && product.imageUrl ? 'block' : 'none' %>;">
               <img id="imgPreview" src="<%= product ? product.imageUrl : '' %>" alt="Preview" style="max-height: 140px; border-radius: 8px; border: 1px solid var(--border-color); object-fit: cover;" />
@@ -136,5 +136,19 @@
       document.getElementById('imagePreviewContainer').style.display = 'block';
     }
   }
+
+  // Smart Paste Listener: if user pastes a URL anywhere (like on the file input), intercept it
+  document.addEventListener('paste', function(e) {
+    // Ignore if they are actively typing in description or other text fields
+    if (e.target.tagName === 'TEXTAREA') return;
+    if (e.target.tagName === 'INPUT' && e.target.type === 'text' && e.target.id !== 'imageUrlInput') return;
+    
+    const pastedData = (e.clipboardData || window.clipboardData).getData('text');
+    if (pastedData && (pastedData.startsWith('http://') || pastedData.startsWith('https://'))) {
+      const urlInput = document.getElementById('imageUrlInput');
+      urlInput.value = pastedData.trim();
+      previewUrlImage();
+    }
+  });
 </script>
 <script src="/js/admin.js" defer></script>
