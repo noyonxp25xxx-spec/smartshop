@@ -265,7 +265,8 @@ async function createProduct(data) {
     try {
       await db.collection("products").doc(newId).set(product);
     } catch (e) {
-      console.warn("Firestore sync warning on create:", e.message);
+      console.error("Firestore sync error on create:", e.message);
+      throw new Error("ফায়ারবেসে ডেটা সেভ করতে সমস্যা হয়েছে: " + e.message);
     }
   }
 
@@ -302,7 +303,8 @@ async function updateProduct(id, data) {
     try {
       await db.collection("products").doc(id).set(updated, { merge: true });
     } catch (e) {
-      console.warn("Firestore sync warning on update:", e.message);
+      console.error("Firestore sync error on update:", e.message);
+      throw new Error("ফায়ারবেসে ডেটা আপডেট করতে সমস্যা হয়েছে: " + e.message);
     }
   }
 
@@ -316,7 +318,10 @@ async function deleteProduct(id) {
   if (db) {
     try {
       await db.collection("products").doc(id).delete();
-    } catch (e) {}
+    } catch (e) {
+      console.error("Firestore sync error on delete:", e.message);
+      throw new Error("ফায়ারবেস থেকে ডেটা মুছতে সমস্যা হয়েছে: " + e.message);
+    }
   }
   return true;
 }

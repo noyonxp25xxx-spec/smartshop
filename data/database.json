@@ -1,32 +1,5 @@
 {
-  "products": [
-    {
-      "id": "prod-1785690325077",
-      "name": "CHARGER",
-      "category": "CHARGER",
-      "uniqueCode": "DDA",
-      "buyPrice": 1100,
-      "sellPrice": 1600,
-      "stock": 100,
-      "description": "",
-      "imageUrl": "/uploads/product-1785690325075-901854305.webp",
-      "createdAt": "2026-08-02T17:05:25.077Z",
-      "updatedAt": "2026-08-02T17:05:25.077Z"
-    },
-    {
-      "id": "prod-1785688451341",
-      "name": "charger",
-      "category": "এক্সেসরিজ",
-      "uniqueCode": "ABX",
-      "buyPrice": 120,
-      "sellPrice": 250,
-      "stock": 10,
-      "description": "High quality fast charger for laptops and mobile devices.",
-      "imageUrl": "/uploads/product-1785689940575-185351603.webp",
-      "createdAt": "2026-08-02T16:34:11.341Z",
-      "updatedAt": "2026-08-02T16:59:00.580Z"
-    }
-  ],
+  "products": [],
   "categories": [
     {
       "id": "cat-4",

@@ -181,7 +181,7 @@ router.post("/admin/api/products", upload.single("image"), async (req, res) => {
     res.json({ ok: true, product: created });
   } catch (err) {
     console.error("Create product error:", err);
-    res.status(500).json({ error: "পণ্য যোগ করতে সমস্যা হয়েছে।" });
+    res.status(500).json({ error: err.message || "পণ্য যোগ করতে সমস্যা হয়েছে।" });
   }
 });
 
@@ -214,7 +214,7 @@ router.put("/admin/api/products/:id", upload.single("image"), async (req, res) =
     res.json({ ok: true, product: updated });
   } catch (err) {
     console.error("Update product error:", err);
-    res.status(500).json({ error: "পণ্য আপডেট করতে সমস্যা হয়েছে।" });
+    res.status(500).json({ error: err.message || "পণ্য আপডেট করতে সমস্যা হয়েছে।" });
   }
 });
 
@@ -239,7 +239,8 @@ router.delete("/admin/api/products/:id", async (req, res) => {
     await store.deleteProduct(req.params.id);
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: "পণ্য মুছতে সমস্যা হয়েছে।" });
+    console.error("Delete product error:", err);
+    res.status(500).json({ error: err.message || "পণ্য মুছতে সমস্যা হয়েছে।" });
   }
 });
 
