@@ -1,19 +1,5 @@
 {
-  "products": [
-    {
-      "id": "prod-1785858629836",
-      "name": "FAST CHARGER",
-      "category": "গেমিং গিয়ার",
-      "uniqueCode": "33W",
-      "buyPrice": 0,
-      "sellPrice": 600,
-      "stock": 10,
-      "description": "",
-      "imageUrl": "https://static-01.daraz.com.bd/p/24adace89e4a799203e330fc32e713a3.jpghttps://static-01.daraz.com.bd/p/24adace89e4a799203e330fc32e713a3.jpg",
-      "createdAt": "2026-08-04T15:50:29.836Z",
-      "updatedAt": "2026-08-04T15:50:29.836Z"
-    }
-  ],
+  "products": [],
   "categories": [
     {
       "id": "cat-4",

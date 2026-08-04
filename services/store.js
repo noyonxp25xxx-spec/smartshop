@@ -198,9 +198,11 @@ async function getAllProducts() {
       const snap = await db.collection("products").orderBy("createdAt", "desc").get();
       if (!snap.empty) {
         return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } else {
+        return []; // If connected but empty, return empty (don't fall back to memoryStore)
       }
     } catch (e) {
-      // Fallback to local memory store
+      // Fallback to local memory store only if Firebase throws an error (e.g. offline)
     }
   }
   return memoryStore.products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));

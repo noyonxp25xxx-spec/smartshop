@@ -37,6 +37,7 @@ router.use(requireRole("admin"));
 
 // GET /admin — Dashboard
 router.get("/admin", async (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   try {
     const products = await store.getAllProducts();
     const users = await store.getAllUsers();
@@ -66,6 +67,7 @@ router.get("/admin", async (req, res, next) => {
 
 // GET /admin/products — All products list
 router.get("/admin/products", async (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   try {
     const products = await store.getAllProducts();
     res.render("admin/products", {
