@@ -337,7 +337,7 @@ async function getAllUsers() {
       }
     } catch (e) {}
   }
-  return memoryStore.users;
+  return [...memoryStore.users].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
 async function getUserByEmail(email) {
