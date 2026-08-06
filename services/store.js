@@ -150,6 +150,7 @@ function loadLocalData() {
   try {
     if (fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, "utf-8");
+      if (raw.trim() === "") throw new Error("File is empty");
       const parsed = JSON.parse(raw);
       return {
         products: Array.isArray(parsed.products) ? parsed.products : [],
@@ -159,15 +160,22 @@ function loadLocalData() {
     }
   } catch (err) {
     console.error("Local database read error:", err.message);
+    if (fs.existsSync(DB_FILE)) {
+      try { fs.copyFileSync(DB_FILE, DB_FILE + ".corrupted.bak"); } catch (e) {}
+    }
   }
   const defaultData = { products: [], categories: initialCategories, users: initialUsers };
-  saveLocalData(defaultData);
+  if (!fs.existsSync(DB_FILE)) {
+    saveLocalData(defaultData);
+  }
   return defaultData;
 }
 
 function saveLocalData(data) {
   try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
+    const tempFile = DB_FILE + ".tmp";
+    fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), "utf-8");
+    fs.renameSync(tempFile, DB_FILE);
   } catch (err) {
     console.error("Local database write error:", err.message);
   }
@@ -205,7 +213,7 @@ async function getAllProducts() {
       // Fallback to local memory store only if Firebase throws an error (e.g. offline)
     }
   }
-  return memoryStore.products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  return [...memoryStore.products].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
 async function getProductById(id) {
