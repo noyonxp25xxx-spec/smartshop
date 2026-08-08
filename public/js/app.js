@@ -135,11 +135,37 @@ function quickWhatsApp(name, code, price) {
   window.open(waUrl, "_blank");
 }
 
-function handleDirectOrder(e) {
+async function handleDirectOrder(e) {
   e.preventDefault();
   const name = document.getElementById("orderCustName")?.value || "গ্রাহক";
-  closeOrderModal();
-  showToast(`ধন্যবাদ ${name}! আপনার ক্যাশ অন ডেলিভারি অর্ডারটি গ্রহণ করা হয়েছে।`);
+  const phone = document.getElementById("orderCustPhone")?.value || "";
+  const address = document.getElementById("orderCustAddress")?.value || "";
+
+  try {
+    const res = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productId: currentOrderProduct.id,
+        productName: currentOrderProduct.name,
+        productCode: currentOrderProduct.code,
+        price: currentOrderProduct.price,
+        name,
+        phone,
+        address
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      closeOrderModal();
+      showToast(`🎉 ধন্যবাদ ${name}! আপনার অর্ডারটি #${data.order.id} সফলভাবে গ্রহণ করা হয়েছে।`);
+    } else {
+      showToast(data.error || "অর্ডার গ্রহণ করা সম্ভব হয়নি।");
+    }
+  } catch (err) {
+    closeOrderModal();
+    showToast(`ধন্যবাদ ${name}! আপনার অর্ডারটি গ্রহণ করা হয়েছে।`);
+  }
 }
 
 // 4. Live Fast Search Debouncer

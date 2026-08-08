@@ -1,14 +1,16 @@
-// routes/admin.js — Admin Panel Routes (Products, Stock, Users & Reseller Management)
+// routes/admin.js — Admin Panel Routes (Products, Stock, Users, Orders & Cloudinary / Firebase Storage)
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const crypto = require("crypto");
 const store = require("../services/store");
-const { bucket } = require("../config/firebaseAdmin");
+const { bucket, hasCredentials } = require("../config/firebaseAdmin");
+const { uploadImage, isCloudinaryConfigured } = require("../config/cloudinary");
 const { requireRole } = require("../middleware/auth");
 
-// Configure local upload storage
+// Configure local upload storage fallback
 const UPLOADS_DIR = path.join(__dirname, "..", "public", "uploads");
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
@@ -30,6 +32,53 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
+// Helper to upload image to Cloudinary (Primary) or Firebase Storage with local fallback
+async function handleImageUpload(file) {
+  if (!file) return null;
+
+  // 1. Primary: Cloudinary Cloud Storage
+  if (isCloudinaryConfigured) {
+    try {
+      const url = await uploadImage(file, "smart-computer-shop/products");
+      if (url) return url;
+    } catch (e) {
+      console.warn("⚠️ Cloudinary upload error, checking fallback:", e.message);
+    }
+  }
+
+  // 2. Secondary: Firebase Storage bucket
+  if (bucket) {
+    try {
+      const ext = path.extname(file.originalname || "") || ".jpg";
+      const filename = `products/${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+      const fileUpload = bucket.file(filename);
+
+      const downloadToken = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+      const filePath = typeof file === "string" ? file : file.path;
+      await fileUpload.save(fs.readFileSync(filePath), {
+        metadata: {
+          contentType: file.mimetype || "image/jpeg",
+          metadata: {
+            firebaseStorageDownloadTokens: downloadToken
+          }
+        },
+        public: true,
+      });
+
+      const bucketName = bucket.name || process.env.FIREBASE_STORAGE_BUCKET || "smart-computer-shop.firebasestorage.app";
+      const encodedFilename = encodeURIComponent(filename);
+      const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedFilename}?alt=media&token=${downloadToken}`;
+      console.log(`🔥 [Firebase Storage] Image uploaded: ${publicUrl}`);
+      return publicUrl;
+    } catch (e) {
+      console.warn("⚠️ Firebase Storage fallback warning:", e.message);
+    }
+  }
+
+  // 3. Fallback to local uploads
+  return typeof file === "string" ? file : (file.filename ? "/uploads/" + file.filename : null);
+}
+
 // Protect all admin routes — only accessible by admin
 router.use(requireRole("admin"));
 
@@ -41,6 +90,7 @@ router.get("/admin", async (req, res, next) => {
   try {
     const products = await store.getAllProducts();
     const users = await store.getAllUsers();
+    const orders = await store.getAllOrders();
 
     const totalStock = products.reduce((sum, p) => sum + (Number(p.stock) || 0), 0);
     const totalInventoryValue = products.reduce((sum, p) => sum + ((Number(p.buyPrice) || Number(p.sellPrice) || 0) * (Number(p.stock) || 0)), 0);
@@ -57,8 +107,11 @@ router.get("/admin", async (req, res, next) => {
         lowStock,
         resellersCount,
         totalUsers: users.length,
+        totalOrders: orders.length,
       },
       recentProducts: products.slice(0, 5),
+      firebaseConnected: hasCredentials,
+      cloudinaryConnected: isCloudinaryConfigured,
     });
   } catch (err) {
     next(err);
@@ -148,6 +201,20 @@ router.get("/admin/users", async (req, res, next) => {
   }
 });
 
+// GET /admin/orders — Customer orders list
+router.get("/admin/orders", async (req, res, next) => {
+  try {
+    const orders = await store.getAllOrders();
+    res.render("admin/orders", {
+      title: "গ্রাহক অর্ডার তালিকা · অ্যাডমিন",
+      user: req.user,
+      orders,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ---------- API: PRODUCTS ---------- //
 
 // POST /admin/api/products — Create product
@@ -161,7 +228,7 @@ router.post("/admin/api/products", upload.single("image"), async (req, res) => {
 
     let imageUrl = imageUrlInput ? imageUrlInput.trim() : null;
     if (req.file) {
-      imageUrl = "/uploads/" + req.file.filename;
+      imageUrl = await handleImageUpload(req.file);
     }
     if (!imageUrl) {
       imageUrl = "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&auto=format&fit=crop&q=80";
@@ -203,7 +270,7 @@ router.put("/admin/api/products/:id", upload.single("image"), async (req, res) =
     };
 
     if (req.file) {
-      data.imageUrl = "/uploads/" + req.file.filename;
+      data.imageUrl = await handleImageUpload(req.file);
     } else if (imageUrlInput) {
       data.imageUrl = imageUrlInput.trim();
     }
@@ -327,6 +394,23 @@ router.delete("/admin/api/categories/:id", async (req, res) => {
   } catch (err) {
     console.error("Delete category error:", err);
     res.status(500).json({ error: "ক্যাটাগরি মুছতে সমস্যা হয়েছে।" });
+  }
+});
+
+// ---------- API: ORDERS ---------- //
+
+// PATCH /admin/api/orders/:id/status — Update order status
+router.patch("/admin/api/orders/:id/status", async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!["pending", "confirmed", "delivered", "cancelled"].includes(status)) {
+      return res.status(400).json({ error: "অবৈধ স্ট্যাটাস।" });
+    }
+
+    await store.updateOrderStatus(req.params.id, status);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: "অর্ডার আপডেট করতে সমস্যা হয়েছে।" });
   }
 });
 

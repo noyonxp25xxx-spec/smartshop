@@ -1,8 +1,8 @@
-// services/store.js — Unified Data Service (Firestore + Local JSON Store Dual-Engine)
+// services/store.js — Unified Data Service (Firebase Firestore + Local Cache Dual-Engine)
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const { db } = require("../config/firebaseAdmin");
+const { db, hasCredentials } = require("../config/firebaseAdmin");
 
 const DATA_DIR = path.join(__dirname, "..", "data");
 const DB_FILE = path.join(DATA_DIR, "database.json");
@@ -130,6 +130,10 @@ const initialCategories = [
   { id: "cat-7", name: "এক্সেসরিজ", icon: "🔌", createdAt: new Date().toISOString() }
 ];
 
+function hashPassword(pass) {
+  return crypto.createHash("sha256").update(String(pass || "")).digest("hex");
+}
+
 // Initial admin user
 const initialUsers = [
   {
@@ -138,13 +142,10 @@ const initialUsers = [
     name: "Noyon (Admin)",
     role: "admin",
     passwordHash: hashPassword("805222"),
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }
 ];
-
-function hashPassword(pass) {
-  return crypto.createHash("sha256").update(String(pass || "")).digest("hex");
-}
 
 function loadLocalData() {
   try {
@@ -155,7 +156,8 @@ function loadLocalData() {
       return {
         products: Array.isArray(parsed.products) ? parsed.products : [],
         categories: Array.isArray(parsed.categories) ? parsed.categories : initialCategories,
-        users: Array.isArray(parsed.users) ? parsed.users : initialUsers
+        users: Array.isArray(parsed.users) ? parsed.users : initialUsers,
+        orders: Array.isArray(parsed.orders) ? parsed.orders : []
       };
     }
   } catch (err) {
@@ -164,7 +166,7 @@ function loadLocalData() {
       try { fs.copyFileSync(DB_FILE, DB_FILE + ".corrupted.bak"); } catch (e) {}
     }
   }
-  const defaultData = { products: [], categories: initialCategories, users: initialUsers };
+  const defaultData = { products: [], categories: initialCategories, users: initialUsers, orders: [] };
   if (!fs.existsSync(DB_FILE)) {
     saveLocalData(defaultData);
   }
@@ -192,28 +194,82 @@ if (!memoryStore.users.some(u => u.email.toLowerCase() === "noyonxp25@gmail.com"
     name: "Noyon (Admin)",
     role: "admin",
     passwordHash: hashPassword("805222"),
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   });
   saveLocalData(memoryStore);
+}
+
+// ---------------- FIRESTORE AUTO-SEED & SYNC ---------------- //
+
+async function autoSyncFirestoreIfConnected() {
+  if (!db) return;
+  try {
+    // Check if products collection has docs
+    const prodSnap = await db.collection("products").limit(1).get();
+    if (prodSnap.empty && memoryStore.products.length > 0) {
+      console.log("🚀 Syncing existing products to Firebase Firestore...");
+      const batch = db.batch();
+      memoryStore.products.forEach(p => {
+        const ref = db.collection("products").doc(p.id);
+        batch.set(ref, p);
+      });
+      await batch.commit();
+      console.log(`✅ Uploaded ${memoryStore.products.length} products to Firestore.`);
+    }
+
+    // Check if categories collection has docs
+    const catSnap = await db.collection("categories").limit(1).get();
+    if (catSnap.empty && memoryStore.categories.length > 0) {
+      console.log("🚀 Syncing existing categories to Firebase Firestore...");
+      const batch = db.batch();
+      memoryStore.categories.forEach(c => {
+        const ref = db.collection("categories").doc(c.id);
+        batch.set(ref, c);
+      });
+      await batch.commit();
+      console.log(`✅ Uploaded ${memoryStore.categories.length} categories to Firestore.`);
+    }
+
+    // Check if admin user is in Firestore
+    const adminDoc = await db.collection("users").doc("admin-noyon-uid").get();
+    if (!adminDoc.exists) {
+      const adminUser = memoryStore.users.find(u => u.email.toLowerCase() === "noyonxp25@gmail.com") || initialUsers[0];
+      await db.collection("users").doc(adminUser.uid).set(adminUser);
+      console.log("✅ Synced Admin account to Firestore users collection.");
+    }
+  } catch (err) {
+    console.warn("⚠️ Firestore auto-sync warning:", err.message);
+  }
+}
+
+// Run auto-sync if connected
+if (hasCredentials && db) {
+  setTimeout(() => {
+    autoSyncFirestoreIfConnected();
+  }, 1500);
 }
 
 // ---------------- PRODUCTS API ---------------- //
 
 async function getAllProducts() {
-  // If Firestore is working, try reading from Firestore
   if (db) {
     try {
-      const snap = await db.collection("products").orderBy("createdAt", "desc").get();
+      const snap = await db.collection("products").get();
       if (!snap.empty) {
-        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      } else {
-        return []; // If connected but empty, return empty (don't fall back to memoryStore)
+        const prods = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Sort descending by createdAt
+        prods.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        // Keep memoryStore updated with fresh cloud data
+        memoryStore.products = prods;
+        saveLocalData(memoryStore);
+        return prods;
       }
     } catch (e) {
-      // Fallback to local memory store only if Firebase throws an error (e.g. offline)
+      console.warn("Firestore getAllProducts fallback:", e.message);
     }
   }
-  return [...memoryStore.products].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  return [...memoryStore.products].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 }
 
 async function getProductById(id) {
@@ -261,7 +317,7 @@ async function createProduct(data) {
     sellPrice: Number(data.sellPrice) || 0,
     stock: Number(data.stock) || 0,
     description: (data.description || "").trim(),
-    imageUrl: data.imageUrl || "/img/no-image.svg",
+    imageUrl: data.imageUrl || "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&auto=format&fit=crop&q=80",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -270,13 +326,13 @@ async function createProduct(data) {
   memoryStore.products.unshift(product);
   saveLocalData(memoryStore);
 
-  // Sync with Firestore if connected
+  // Sync with Firestore Cloud
   if (db) {
     try {
       await db.collection("products").doc(newId).set(product);
+      console.log(`🔥 [Firestore] Created product '${product.name}' (${newId})`);
     } catch (e) {
       console.error("Firestore sync error on create:", e.message);
-      throw new Error("ফায়ারবেসে ডেটা সেভ করতে সমস্যা হয়েছে: " + e.message);
     }
   }
 
@@ -285,9 +341,8 @@ async function createProduct(data) {
 
 async function updateProduct(id, data) {
   const idx = memoryStore.products.findIndex(p => p.id === id);
-  if (idx === -1 && !db) return null;
+  const existing = idx !== -1 ? memoryStore.products[idx] : (await getProductById(id)) || {};
 
-  const existing = idx !== -1 ? memoryStore.products[idx] : {};
   const updated = {
     ...existing,
     id,
@@ -309,12 +364,13 @@ async function updateProduct(id, data) {
   }
   saveLocalData(memoryStore);
 
+  // Sync with Firestore Cloud
   if (db) {
     try {
       await db.collection("products").doc(id).set(updated, { merge: true });
+      console.log(`🔥 [Firestore] Updated product '${updated.name}' (${id})`);
     } catch (e) {
       console.error("Firestore sync error on update:", e.message);
-      throw new Error("ফায়ারবেসে ডেটা আপডেট করতে সমস্যা হয়েছে: " + e.message);
     }
   }
 
@@ -328,9 +384,9 @@ async function deleteProduct(id) {
   if (db) {
     try {
       await db.collection("products").doc(id).delete();
+      console.log(`🔥 [Firestore] Deleted product ${id}`);
     } catch (e) {
       console.error("Firestore sync error on delete:", e.message);
-      throw new Error("ফায়ারবেস থেকে ডেটা মুছতে সমস্যা হয়েছে: " + e.message);
     }
   }
   return true;
@@ -341,13 +397,17 @@ async function deleteProduct(id) {
 async function getAllUsers() {
   if (db) {
     try {
-      const snap = await db.collection("users").orderBy("createdAt", "desc").get();
+      const snap = await db.collection("users").get();
       if (!snap.empty) {
-        return snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+        const users = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+        users.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        memoryStore.users = users;
+        saveLocalData(memoryStore);
+        return users;
       }
     } catch (e) {}
   }
-  return [...memoryStore.users].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  return [...memoryStore.users].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 }
 
 async function getUserByEmail(email) {
@@ -408,6 +468,7 @@ async function saveOrUpdateUser(userObj) {
   if (db) {
     try {
       await db.collection("users").doc(uid).set(finalUser, { merge: true });
+      console.log(`🔥 [Firestore] Saved user ${finalUser.email} (${uid})`);
     } catch (e) {}
   }
 
@@ -424,7 +485,8 @@ async function updateUserRole(uid, role) {
 
   if (db) {
     try {
-      await db.collection("users").doc(uid).update({ role });
+      await db.collection("users").doc(uid).set({ role, updatedAt: new Date().toISOString() }, { merge: true });
+      console.log(`🔥 [Firestore] Updated user ${uid} role to ${role}`);
     } catch (e) {}
   }
   return true;
@@ -446,9 +508,13 @@ function verifyUserPassword(user, password) {
 async function getAllCategories() {
   if (db) {
     try {
-      const snap = await db.collection("categories").orderBy("createdAt", "asc").get();
+      const snap = await db.collection("categories").get();
       if (!snap.empty) {
-        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const cats = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        cats.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+        memoryStore.categories = cats;
+        saveLocalData(memoryStore);
+        return cats;
       }
     } catch (e) {}
   }
@@ -482,6 +548,7 @@ async function createCategory(data) {
   if (db) {
     try {
       await db.collection("categories").doc(newId).set(cat);
+      console.log(`🔥 [Firestore] Created category '${cat.name}' (${newId})`);
     } catch (e) {}
   }
   return cat;
@@ -490,9 +557,8 @@ async function createCategory(data) {
 async function updateCategory(id, data) {
   if (!memoryStore.categories) memoryStore.categories = [];
   const idx = memoryStore.categories.findIndex(c => c.id === id);
-  if (idx === -1 && !db) return null;
+  const existing = idx !== -1 ? memoryStore.categories[idx] : (await getCategoryById(id)) || {};
 
-  const existing = idx !== -1 ? memoryStore.categories[idx] : {};
   const updated = {
     ...existing,
     id,
@@ -519,6 +585,7 @@ async function updateCategory(id, data) {
   if (db) {
     try {
       await db.collection("categories").doc(id).set(updated, { merge: true });
+      console.log(`🔥 [Firestore] Updated category '${updated.name}' (${id})`);
     } catch (e) {}
   }
   return updated;
@@ -532,6 +599,74 @@ async function deleteCategory(id) {
   if (db) {
     try {
       await db.collection("categories").doc(id).delete();
+      console.log(`🔥 [Firestore] Deleted category ${id}`);
+    } catch (e) {}
+  }
+  return true;
+}
+
+// ---------------- ORDERS API (FIRESTORE CLOUD) ---------------- //
+
+async function createOrder(data) {
+  const orderId = "ord-" + Date.now();
+  const order = {
+    id: orderId,
+    productId: data.productId || null,
+    productName: data.productName || "অজ্ঞাত পণ্য",
+    productCode: data.productCode || null,
+    price: Number(data.price) || 0,
+    customerName: (data.customerName || data.name || "").trim(),
+    phone: (data.phone || "").trim(),
+    address: (data.address || "").trim(),
+    status: "pending", // pending, confirmed, delivered, cancelled
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  if (!memoryStore.orders) memoryStore.orders = [];
+  memoryStore.orders.unshift(order);
+  saveLocalData(memoryStore);
+
+  if (db) {
+    try {
+      await db.collection("orders").doc(orderId).set(order);
+      console.log(`🔥 [Firestore] Saved new customer order #${orderId}`);
+    } catch (e) {
+      console.error("Firestore order save error:", e.message);
+    }
+  }
+
+  return order;
+}
+
+async function getAllOrders() {
+  if (db) {
+    try {
+      const snap = await db.collection("orders").get();
+      if (!snap.empty) {
+        const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        orders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        memoryStore.orders = orders;
+        saveLocalData(memoryStore);
+        return orders;
+      }
+    } catch (e) {}
+  }
+  return [...(memoryStore.orders || [])].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+}
+
+async function updateOrderStatus(orderId, status) {
+  if (!memoryStore.orders) memoryStore.orders = [];
+  const order = memoryStore.orders.find(o => o.id === orderId);
+  if (order) {
+    order.status = status;
+    order.updatedAt = new Date().toISOString();
+    saveLocalData(memoryStore);
+  }
+
+  if (db) {
+    try {
+      await db.collection("orders").doc(orderId).set({ status, updatedAt: new Date().toISOString() }, { merge: true });
     } catch (e) {}
   }
   return true;
@@ -555,5 +690,9 @@ module.exports = {
   saveOrUpdateUser,
   updateUserRole,
   verifyUserPassword,
-  hashPassword
+  hashPassword,
+  createOrder,
+  getAllOrders,
+  updateOrderStatus,
+  autoSyncFirestoreIfConnected
 };

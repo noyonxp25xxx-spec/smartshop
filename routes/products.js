@@ -1,4 +1,4 @@
-// routes/products.js — Public Storefront & Fast Search API
+// routes/products.js — Public Storefront, Search & Direct Order API
 const express = require("express");
 const router = express.Router();
 const store = require("../services/store");
@@ -111,6 +111,31 @@ router.get("/product/:id", async (req, res) => {
       message: "পণ্য লোড করার সময় সমস্যা হয়েছে।",
       user: req.user,
     });
+  }
+});
+
+// POST /api/orders — Save direct customer order to Firebase Cloud
+router.post("/api/orders", async (req, res) => {
+  try {
+    const { productId, productName, productCode, price, name, phone, address } = req.body;
+    if (!name || !phone || !address) {
+      return res.status(400).json({ error: "নাম, ফোন নাম্বার ও ঠিকানা আবশ্যক।" });
+    }
+
+    const order = await store.createOrder({
+      productId,
+      productName,
+      productCode,
+      price: Number(price) || 0,
+      customerName: name,
+      phone,
+      address,
+    });
+
+    res.json({ ok: true, order });
+  } catch (err) {
+    console.error("Order API error:", err);
+    res.status(500).json({ error: "অর্ডার গ্রহণ করা সম্ভব হয়নি।" });
   }
 });
 

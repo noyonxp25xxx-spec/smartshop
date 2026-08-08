@@ -1,5 +1,19 @@
 {
-  "products": [],
+  "products": [
+    {
+      "id": "prod-1786172827373",
+      "name": "MKB",
+      "category": "headphone",
+      "uniqueCode": "V01",
+      "buyPrice": 0,
+      "sellPrice": 1200,
+      "stock": 10,
+      "description": "",
+      "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCRjfhhSuOTifPyZ8fEniEQ3JoPs4ThcTvbZlsu-C4Lf-hAl8bK9BqRuYM&s=10https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCRjfhhSuOTifPyZ8fEniEQ3JoPs4ThcTvbZlsu-C4Lf-hAl8bK9BqRuYM&s=10",
+      "createdAt": "2026-08-08T07:07:07.373Z",
+      "updatedAt": "2026-08-08T07:07:07.373Z"
+    }
+  ],
   "categories": [
     {
       "id": "cat-4",
@@ -42,35 +56,9 @@
       "name": "Noyon (Admin)",
       "role": "admin",
       "passwordHash": "934430d20d420275208719008370af8f889f426c44f576037cb4d5d07f5f7a1a",
-      "updatedAt": "2026-08-02T16:59:55.889Z",
+      "updatedAt": "2026-08-08T06:11:32.671Z",
       "createdAt": "2026-08-02T16:27:22.213Z"
-    },
-    {
-      "uid": "g2QYtt73HBSJGWKjA97YJyuHHl83",
-      "email": "mastercomputer2525@gmail.com",
-      "name": "mastercomputer2525@gmail.com",
-      "role": "customer",
-      "passwordHash": null,
-      "updatedAt": "2026-08-02T17:16:21.681Z",
-      "createdAt": "2026-08-02T16:27:57.015Z"
-    },
-    {
-      "uid": "usr-1785689048242",
-      "email": "b@gmail.com",
-      "name": "sammm",
-      "role": "customer",
-      "passwordHash": "934430d20d420275208719008370af8f889f426c44f576037cb4d5d07f5f7a1a",
-      "updatedAt": "2026-08-02T17:16:53.227Z",
-      "createdAt": "2026-08-02T16:44:08.242Z"
-    },
-    {
-      "uid": "usr-1785691580075",
-      "email": "smartshop@gmail.com",
-      "name": "ARIF HOSSAIN",
-      "role": "admin",
-      "passwordHash": "934430d20d420275208719008370af8f889f426c44f576037cb4d5d07f5f7a1a",
-      "updatedAt": "2026-08-02T17:26:42.387Z",
-      "createdAt": "2026-08-02T17:26:20.075Z"
     }
-  ]
+  ],
+  "orders": []
 }

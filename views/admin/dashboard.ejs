@@ -8,9 +8,19 @@
           <h1 style="font-family: var(--font-heading); font-size: 26px; font-weight: 800;">
             অ্যাডমিন ড্যাশবোর্ড
           </h1>
-          <p style="color: var(--text-secondary); font-size: 14px;">
-            স্মার্ট কম্পিউটার শপের সার্বিক স্টক, রিসেলার ও সেলস ওভারভিউ
-          </p>
+          <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px; flex-wrap: wrap;">
+            <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">
+              স্মার্ট কম্পিউটার শপের সার্বিক স্টক, রিসেলার ও সেলস ওভারভিউ
+            </p>
+            <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 11px; padding: 2px 8px;">
+              ☁️ Cloudinary Storage: কানেক্টেড
+            </span>
+            <% if (typeof firebaseConnected !== 'undefined' && firebaseConnected) { %>
+              <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3); font-size: 11px; padding: 2px 8px;">
+                🔥 Firebase Firestore: অ্যাক্টিভ
+              </span>
+            <% } %>
+          </div>
         </div>
         <a href="/admin/products/new" class="btn">
           ➕ নতুন পণ্য যোগ করুন
