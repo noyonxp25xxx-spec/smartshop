@@ -105,14 +105,20 @@
                         type="button" 
                         class="btn btn-secondary btn-small" 
                         style="margin-right: 4px;"
-                        onclick="startEditCat('<%= c.id %>', '<%= c.name %>', '<%= c.icon || '📦' %>')"
+                        data-id="<%= c.id %>"
+                        data-name="<%= c.name %>"
+                        data-icon="<%= c.icon || '📦' %>"
+                        onclick="startEditCat(this.dataset.id, this.dataset.name, this.dataset.icon)"
                       >
                         ✏️ এডিট
                       </button>
                       <button 
                         type="button" 
                         class="btn btn-danger btn-small"
-                        onclick="deleteCategory('<%= c.id %>', '<%= c.name %>', <%= c.productCount || 0 %>)"
+                        data-id="<%= c.id %>"
+                        data-name="<%= c.name %>"
+                        data-count="<%= c.productCount || 0 %>"
+                        onclick="deleteCategory(this.dataset.id, this.dataset.name, parseInt(this.dataset.count))"
                       >
                         🗑️ মুছুন
                       </button>
