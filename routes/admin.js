@@ -79,6 +79,31 @@ async function handleImageUpload(file) {
   return typeof file === "string" ? file : (file.filename ? "/uploads/" + file.filename : null);
 }
 
+// Helper to format & normalize external image URLs from any website
+function formatImageUrl(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return null;
+  let url = rawUrl.trim();
+  if (!url) return null;
+
+  // 1. Strip surrounding quotes (double or single)
+  url = url.replace(/^["']|["']$/g, '').trim();
+
+  // 2. If an HTML tag like <img src="..."> or Markdown is pasted, extract the URL
+  const imgTagMatch = url.match(/src=["']?([^"'\s>]+)["']?/i) || url.match(/!\[.*?\]\((https?:\/\/[^\s)]+)\)/i);
+  if (imgTagMatch && imgTagMatch[1]) {
+    url = imgTagMatch[1].trim();
+  }
+
+  // 3. Normalize protocol
+  if (url.startsWith('//')) {
+    url = 'https:' + url;
+  } else if (!/^https?:\/\//i.test(url) && !url.startsWith('data:') && !url.startsWith('blob:') && !url.startsWith('/')) {
+    url = 'https://' + url;
+  }
+
+  return url;
+}
+
 // Protect all admin routes — only accessible by admin
 router.use(requireRole("admin"));
 
@@ -226,7 +251,7 @@ router.post("/admin/api/products", upload.single("image"), async (req, res) => {
       return res.status(400).json({ error: "পণ্যের নাম ও বিক্রয় মূল্য আবশ্যক।" });
     }
 
-    let imageUrl = imageUrlInput ? imageUrlInput.trim() : null;
+    let imageUrl = imageUrlInput ? formatImageUrl(imageUrlInput) : null;
     if (req.file) {
       imageUrl = await handleImageUpload(req.file);
     }
@@ -272,7 +297,8 @@ router.put("/admin/api/products/:id", upload.single("image"), async (req, res) =
     if (req.file) {
       data.imageUrl = await handleImageUpload(req.file);
     } else if (imageUrlInput) {
-      data.imageUrl = imageUrlInput.trim();
+      const formatted = formatImageUrl(imageUrlInput);
+      if (formatted) data.imageUrl = formatted;
     }
 
     const updated = await store.updateProduct(req.params.id, data);

@@ -75,13 +75,14 @@
 
           <!-- Product Image -->
           <div class="input-field">
-            <label class="input-label">ছবি আপলোড অথবা ইমেজ URL (যেকোনো একটি)</label>
+            <label class="input-label">ছবি আপলোড অথবা যেকোনো ওয়েবসাইট থেকে ইমেজ URL (Paste any web link)</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 8px;">
               <input type="file" name="image" id="imageFileInput" class="input-control" accept="image/*" onchange="previewSelectedImage(event)" />
-              <input type="text" name="imageUrlInput" id="imageUrlInput" class="input-control" placeholder="এখানে ইমেজের লিংক পেস্ট করুন (Paste Here)..." value="<%= product ? product.imageUrl : '' %>" oninput="previewUrlImage()" />
+              <input type="text" name="imageUrlInput" id="imageUrlInput" class="input-control" placeholder="যেকোনো ওয়েব লিঙ্ক পেস্ট করুন (যেমন: https://site.com/image.jpg)..." value="<%= product ? product.imageUrl : '' %>" oninput="previewUrlImage()" onchange="previewUrlImage()" />
             </div>
             <div id="imagePreviewContainer" style="margin-top: 10px; display: <%= product && product.imageUrl ? 'block' : 'none' %>;">
-              <img id="imgPreview" src="<%= product ? product.imageUrl : '' %>" alt="Preview" style="max-height: 140px; border-radius: 8px; border: 1px solid var(--border-color); object-fit: cover;" />
+              <img id="imgPreview" src="<%= product ? product.imageUrl : '' %>" alt="Preview" referrerpolicy="no-referrer" onerror="handlePreviewError()" style="max-height: 140px; border-radius: 8px; border: 1px solid var(--border-color); object-fit: cover;" />
+              <div id="imgPreviewStatus" style="font-size: 12px; color: var(--text-muted); margin-top: 4px;"></div>
             </div>
           </div>
 
@@ -117,37 +118,79 @@
     document.getElementById('uniqueCodeInput').value = code;
   }
 
+  function cleanImageUrl(rawUrl) {
+    if (!rawUrl) return '';
+    let url = rawUrl.trim();
+    if (!url) return '';
+    // Strip surrounding quotes
+    url = url.replace(/^["']|["']$/g, '').trim();
+    // Extract src from HTML tag if pasted
+    const imgTagMatch = url.match(/src=["']?([^"'\s>]+)["']?/i) || url.match(/!\[.*?\]\((https?:\/\/[^\s)]+)\)/i);
+    if (imgTagMatch && imgTagMatch[1]) {
+      url = imgTagMatch[1].trim();
+    }
+    // Fix protocols
+    if (url.startsWith('//')) {
+      url = 'https:' + url;
+    } else if (!/^https?:\/\//i.test(url) && !url.startsWith('data:') && !url.startsWith('blob:') && !url.startsWith('/')) {
+      url = 'https://' + url;
+    }
+    return url;
+  }
+
   function previewSelectedImage(event) {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = function(e) {
-        document.getElementById('imgPreview').src = e.target.result;
+        const preview = document.getElementById('imgPreview');
+        preview.src = e.target.result;
         document.getElementById('imagePreviewContainer').style.display = 'block';
+        document.getElementById('imgPreviewStatus').textContent = '✅ লোকাল ছবি সিলেক্ট করা হয়েছে';
       };
       reader.readAsDataURL(file);
     }
   }
 
   function previewUrlImage() {
-    const url = document.getElementById('imageUrlInput').value.trim();
-    if (url) {
-      document.getElementById('imgPreview').src = url;
+    const input = document.getElementById('imageUrlInput');
+    const rawVal = input.value;
+    const cleaned = cleanImageUrl(rawVal);
+    const statusEl = document.getElementById('imgPreviewStatus');
+
+    if (cleaned) {
+      if (cleaned !== rawVal) {
+        input.value = cleaned;
+      }
+      const preview = document.getElementById('imgPreview');
+      preview.src = cleaned;
       document.getElementById('imagePreviewContainer').style.display = 'block';
+      if (statusEl) statusEl.textContent = '🌐 ওয়েব ইমেজের প্রিভিউ দেখানো হচ্ছে...';
+    } else {
+      document.getElementById('imagePreviewContainer').style.display = 'none';
+    }
+  }
+
+  function handlePreviewError() {
+    const statusEl = document.getElementById('imgPreviewStatus');
+    if (statusEl) {
+      statusEl.textContent = '⚠️ সতর্কতা: ইমেজ লিঙ্কটি লোড করতে সমস্যা হচ্ছে (তবে সেভ করা যাবে)';
     }
   }
 
   // Smart Paste Listener: if user pastes a URL anywhere (like on the file input), intercept it
   document.addEventListener('paste', function(e) {
-    // Ignore if they are actively typing in description or other text fields
     if (e.target.tagName === 'TEXTAREA') return;
     if (e.target.tagName === 'INPUT' && e.target.type === 'text' && e.target.id !== 'imageUrlInput') return;
-    
+
     const pastedData = (e.clipboardData || window.clipboardData).getData('text');
-    if (pastedData && (pastedData.startsWith('http://') || pastedData.startsWith('https://'))) {
-      const urlInput = document.getElementById('imageUrlInput');
-      urlInput.value = pastedData.trim();
-      previewUrlImage();
+    if (pastedData) {
+      const cleaned = cleanImageUrl(pastedData);
+      if (cleaned && (cleaned.startsWith('http://') || cleaned.startsWith('https://') || cleaned.startsWith('data:'))) {
+        const urlInput = document.getElementById('imageUrlInput');
+        urlInput.value = cleaned;
+        previewUrlImage();
+      }
     }
   });
 </script>

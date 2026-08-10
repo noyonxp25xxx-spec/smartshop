@@ -84,7 +84,7 @@
               <% recentProducts.forEach(function(p) { %>
                 <tr>
                   <td style="width: 50px;">
-                    <img src="<%= p.imageUrl %>" alt="<%= p.name %>" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color);" />
+                    <img src="<%= p.imageUrl %>" alt="<%= p.name %>" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&auto=format&fit=crop&q=80';" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color);" />
                   </td>
                   <td>
                     <strong><%= p.name %></strong><br />
