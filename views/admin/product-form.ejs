@@ -81,8 +81,8 @@
               <input type="text" name="imageUrlInput" id="imageUrlInput" class="input-control" placeholder="যেকোনো ওয়েব লিঙ্ক পেস্ট করুন (যেমন: https://site.com/image.jpg)..." value="<%= product ? product.imageUrl : '' %>" oninput="previewUrlImage()" onchange="previewUrlImage()" />
             </div>
             <div id="imagePreviewContainer" style="margin-top: 10px; display: <%= product && product.imageUrl ? 'block' : 'none' %>;">
-              <img id="imgPreview" src="<%= product ? product.imageUrl : '' %>" alt="Preview" referrerpolicy="no-referrer" onerror="handlePreviewError()" style="max-height: 140px; border-radius: 8px; border: 1px solid var(--border-color); object-fit: cover;" />
-              <div id="imgPreviewStatus" style="font-size: 12px; color: var(--text-muted); margin-top: 4px;"></div>
+              <img id="imgPreview" <% if (product && product.imageUrl) { %>src="<%= product.imageUrl %>"<% } %> alt="Preview" referrerpolicy="no-referrer" onload="handlePreviewSuccess()" onerror="handlePreviewError()" style="max-height: 140px; border-radius: 8px; border: 1px solid var(--border-color); object-fit: cover;" />
+              <div id="imgPreviewStatus" style="font-size: 12px; margin-top: 4px;"></div>
             </div>
           </div>
 
@@ -122,13 +122,31 @@
     if (!rawUrl) return '';
     let url = rawUrl.trim();
     if (!url) return '';
+
     // Strip surrounding quotes
     url = url.replace(/^["']|["']$/g, '').trim();
+
     // Extract src from HTML tag if pasted
     const imgTagMatch = url.match(/src=["']?([^"'\s>]+)["']?/i) || url.match(/!\[.*?\]\((https?:\/\/[^\s)]+)\)/i);
     if (imgTagMatch && imgTagMatch[1]) {
       url = imgTagMatch[1].trim();
     }
+
+    // Extract from Google Images URL if copied from Google Search
+    if (url.includes('google.com/imgres') || url.includes('google.com/search')) {
+      const match = url.match(/[?&]imgurl=([^&]+)/i);
+      if (match && match[1]) {
+        try {
+          url = decodeURIComponent(match[1]);
+        } catch (e) {}
+      }
+    }
+
+    // Convert Imgur page URL to direct image URL
+    if (/^https?:\/\/imgur\.com\/([a-zA-Z0-9]+)$/i.test(url)) {
+      url = url.replace(/^https?:\/\/imgur\.com\/([a-zA-Z0-9]+)$/i, 'https://i.imgur.com/$1.jpg');
+    }
+
     // Fix protocols
     if (url.startsWith('//')) {
       url = 'https:' + url;
@@ -146,7 +164,11 @@
         const preview = document.getElementById('imgPreview');
         preview.src = e.target.result;
         document.getElementById('imagePreviewContainer').style.display = 'block';
-        document.getElementById('imgPreviewStatus').textContent = '✅ লোকাল ছবি সিলেক্ট করা হয়েছে';
+        const statusEl = document.getElementById('imgPreviewStatus');
+        if (statusEl) {
+          statusEl.style.color = '#34D399';
+          statusEl.textContent = '✅ লোকাল ছবি সিলেক্ট করা হয়েছে';
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -154,27 +176,48 @@
 
   function previewUrlImage() {
     const input = document.getElementById('imageUrlInput');
-    const rawVal = input.value;
+    const rawVal = input ? input.value : '';
     const cleaned = cleanImageUrl(rawVal);
     const statusEl = document.getElementById('imgPreviewStatus');
 
-    if (cleaned) {
+    if (cleaned && cleaned.length > 5) {
       if (cleaned !== rawVal) {
         input.value = cleaned;
       }
       const preview = document.getElementById('imgPreview');
-      preview.src = cleaned;
+      if (preview.getAttribute('src') !== cleaned) {
+        preview.src = cleaned;
+      }
       document.getElementById('imagePreviewContainer').style.display = 'block';
-      if (statusEl) statusEl.textContent = '🌐 ওয়েব ইমেজের প্রিভিউ দেখানো হচ্ছে...';
+      if (statusEl) {
+        statusEl.style.color = 'var(--accent-cyan)';
+        statusEl.textContent = '🌐 ওয়েব ইমেজের প্রিভিউ লোড হচ্ছে...';
+      }
     } else {
+      const preview = document.getElementById('imgPreview');
+      preview.removeAttribute('src');
       document.getElementById('imagePreviewContainer').style.display = 'none';
+      if (statusEl) statusEl.textContent = '';
+    }
+  }
+
+  function handlePreviewSuccess() {
+    const input = document.getElementById('imageUrlInput');
+    const statusEl = document.getElementById('imgPreviewStatus');
+    if (input && input.value.trim() && statusEl) {
+      statusEl.style.color = '#34D399';
+      statusEl.textContent = '✅ ইমেজ সফলভাবে লোড হয়েছে!';
     }
   }
 
   function handlePreviewError() {
+    const input = document.getElementById('imageUrlInput');
     const statusEl = document.getElementById('imgPreviewStatus');
-    if (statusEl) {
-      statusEl.textContent = '⚠️ সতর্কতা: ইমেজ লিঙ্কটি লোড করতে সমস্যা হচ্ছে (তবে সেভ করা যাবে)';
+    if (input && input.value.trim().length > 5 && statusEl) {
+      statusEl.style.color = '#FBBF24';
+      statusEl.textContent = '⚠️ সতর্কতা: ইমেজ প্রিভিউ লোড হতে সমস্যা হচ্ছে (তবে সেভ করা যাবে)';
+    } else if (statusEl) {
+      statusEl.textContent = '';
     }
   }
 
